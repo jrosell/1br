@@ -6,7 +6,7 @@
 
 -   This is the repo inspired by [Gunnar Morlng's](https://www.morling.dev/blog/one-billion-row-challenge/) 1 billion row challenge to see which functions / libraries are quickest in summarizing the mean, min and max of a 1 billion rows of record
 -   This work is based on [alejandrohagan/1br](https://github.com/alejandrohagan/1br) and [#5](https://github.com/alejandrohagan/1br/issues/5), but I've only used 1e8 rows.
--   I've added the reading part in the benchmark and some duckdb options.
+-   I've added the reading part in the benchmark and some duckdb options and polars scan option.
 -   If you see any issues or have suggestions of improvements, please let me know.
 
 ### Instructions
