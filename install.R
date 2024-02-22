@@ -1,5 +1,6 @@
 install_required_packages <- function(install) {
   if (install) {
+    rlang::check_installed("arrow")
     rlang::check_installed(
       "data.table",
       action = \(pkg, ...)  pak::pak("Rdatatable/data.table")

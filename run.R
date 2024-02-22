@@ -9,6 +9,7 @@ library(Rfast)
 library(duckdb)
 library(dtplyr)
 library(patchwork)
+library(arrow)
 
 run <- function() {
   all <- bench::press(
@@ -145,6 +146,30 @@ run <- function() {
           )
           df <- NULL
           gc()
+        },
+        arrow = {
+            df <- read_csv_arrow(file_name) |>
+                summarise(
+                    .by = state,
+                    mean = mean(measurement),
+                    min = min(measurement),
+                    max = max(measurement)
+                ) |>
+                collect()
+            df <- NULL
+            gc()
+        },
+        scan_polars = {
+            df <- pl$scan_csv(file_name)$
+                group_by("state")$
+                agg(
+                    pl$col("measurement")$min()$alias("min_m"),
+                    pl$col("measurement")$max()$alias("max_m"), # nolint: indentation_linter, line_length_linter.
+                    pl$col("measurement")$mean()$alias("mean_m")
+                )$
+                collect()
+            df <- NULL
+            gc()
         },
         DT_polars = {
           df <- data.table::fread(file_name)
