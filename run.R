@@ -10,6 +10,7 @@ library(duckdb)
 library(dtplyr)
 library(patchwork)
 library(arrow)
+library(tidypolars)
 
 threads <- 8
 data.table::setDTthreads(threads)
@@ -106,20 +107,19 @@ run <- function() {
           df <- NULL
           gc()
         },
-        DT_dplyr_range = {
-          file.copy(file_name, "measurements.csv", overwrite = TRUE)
-          df <- data.table::fread("measurements.csv")
-          df <- df |>
-            dplyr::reframe(
-              .by = state,
-              mean = mean(measurement),
-              name = c("min", "max"),
-              value = range(measurement)
-            ) |>
-            pivot_wider()
-          print(as_tibble(df), n = Inf)
-          df <- NULL
-          gc()
+        scan_tidypolars_dplyr = {
+            file.copy(file_name, "measurements.csv", overwrite = TRUE)
+            df <- pl$scan_csv("measurements.csv")
+            df <- df |> summarise(
+                .by = state,
+                mean = mean(measurement),
+                min = min(measurement),
+                max = max(measurement)
+                ) |>
+                collect()
+            print(as_tibble(df), n = Inf)
+            df <- NULL
+            gc()
         },
         DT_datatable = {
           file.copy(file_name, "measurements.csv", overwrite = TRUE)

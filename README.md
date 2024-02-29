@@ -18,18 +18,18 @@
 
 ### Results
 
-#### 2024-02-28
+#### 2024-02-29
 
-![](2024-02-28_1e6_rows.png)
+![](2024-02-29_1e6_rows.png)
 
-![](2024-02-28_1e7_rows.png)
+![](2024-02-29_1e7_rows.png)
 
-![](2024-02-28_1e8_rows.png)
+![](2024-02-29_1e8_rows.png)
 
-![](2024-02-28_all_rows.png)
+![](2024-02-29_all_rows.png)
 
 ```         
-readr::read_rds("2024-02-28_all.rds")  %>% 
+readr::read_rds("2024-02-29_all.rds")  %>% 
   group_split(n)
 ```
 
