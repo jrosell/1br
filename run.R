@@ -231,6 +231,36 @@ run <- function() {
           df <- NULL
           gc()
         },
+        scan_polars_streaming = {
+            print("scan_polars_streaming")
+            file.copy(file_name, "measurements.csv", overwrite = TRUE)
+            df <- pl$scan_csv("measurements.csv")$
+                group_by("state")$
+                agg(
+                    pl$col("measurement")$min()$alias("min_m"),
+                    pl$col("measurement")$max()$alias("max_m"), # nolint: indentation_linter, line_length_linter.
+                    pl$col("measurement")$mean()$alias("mean_m")
+                )$
+                collect(streaming = TRUE)
+            print(as_tibble(df), n = Inf)
+            df <- NULL
+            gc()
+        },
+        scan_tidypolars_dplyr_streaming = {
+            print("scan_tidypolars_dplyr_streaming")
+            file.copy(file_name, "measurements.csv", overwrite = TRUE)
+            df <- pl$scan_csv("measurements.csv")
+            df <- df |> summarise(
+                .by = state,
+                mean = mean(measurement),
+                min = min(measurement),
+                max = max(measurement)
+            ) |>
+                collect(streaming = TRUE)
+            print(as_tibble(df), n = Inf)
+            df <- NULL
+            gc()
+        },
         filter_gc = FALSE,
         min_iterations = 5,
         check = FALSE

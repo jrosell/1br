@@ -18,6 +18,12 @@
 
 ### Results
 
+#### 2024-03-27
+
+![](2024-03-27_1e9_rows.png)
+
+![](2024-03-27_all_rows.png)
+
 #### 2024-02-29
 
 ![](2024-02-29_1e6_rows.png)
@@ -38,7 +44,7 @@ readr::read_rds("2024-02-29_all.rds")  %>%
 If you want, you have time and you have enough memory available in your computer, then you can try get the results for 1e9 rows:
 
 -   Uncomment 1e9 lines on ./generate_data.sh
--   Comment run.R:16 and uncomment run.R:17
+-   Comment run.R:25 and uncomment run.R:26
 -   Generate 1e6, 1e7, 1e8 and 1e9 data running: ./generate_data.sh
 -   Run the benchmark running: Rscript run.R
 -   Check the generated plots.
