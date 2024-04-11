@@ -12,11 +12,15 @@
 ### Instructions
 
 -   If you need, execute install_required_packages(install = TRUE) from install.R file.
--   Generate 1e6, 1e7, and 1e8 data running: ./generate_data.sh
--   Run the benchmark running: Rscript run.R
--   Check the generated plots and the results
+-   Generate 1e5, 1e6, 1e7, 1e8, 1e9 data running: ./generate_data.sh
+-   Run the benchmark running: Rscript run.R or Rscript run.1e9.R
+-   Check the generated plots and the results.
 
 ### Results
+
+#### 2024-04-11
+
+![](2024-04-11_1e9_rows.png)
 
 #### 2024-03-27
 
@@ -48,5 +52,6 @@ If you want, you have time and you have enough memory available in your computer
 -   Generate 1e6, 1e7, 1e8 and 1e9 data running: ./generate_data.sh
 -   Run the benchmark running: Rscript run.R
 -   Check the generated plots.
+-   Compare with other languages and solutions (Look at compare.php or onebrc for for rust)
 
 Feedback is welcome. You can open an issue in this repo.
