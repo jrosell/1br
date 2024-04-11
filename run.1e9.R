@@ -131,7 +131,7 @@ run <- function() {
         # },
         memory = FALSE,
         filter_gc = FALSE,
-        min_iterations = 1,
+        min_iterations = 3,
         check = FALSE
       )
       print(res)
