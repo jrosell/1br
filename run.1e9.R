@@ -56,8 +56,106 @@ run <- function() {
             df <- NULL
             gc()
         },
+        arrow_dataset = {
+            ds <- arrow::open_csv_dataset(file_name)
+            df <- ds |>
+                summarize(
+                    .by = state,
+                    state_min = min(measurement),
+                    state_max = max(measurement),
+                    state_sum = sum(measurement),
+                    state_n = n()
+                ) |>
+                mutate(state_mean = state_sum/state_n) |>
+                select(state, state_min, state_mean, state_max) |>
+                collect()
+            df
+        },
+        arrow_dataset_batch_processing = {
+              ds <- arrow::open_csv_dataset(file_name)
+              df <- ds |>
+                  arrow::map_batches(function(batch) {
+                      batch |>
+                          as.data.frame() |>
+                          summarize(
+                              .by = state,
+                              state_min = min(measurement),
+                              state_max = max(measurement),
+                              state_sum = sum(measurement),
+                              state_n = n()
+                          ) |>
+                          arrow::as_record_batch()
+                  }) |>
+                  mutate(state_mean = state_sum/state_n) |>
+                  select(state, state_min, state_mean, state_max) |>
+                  collect()
+              df
+        },
+        duckplyr_df_from_csv = {
+            df <- duckplyr::duckplyr_df_from_csv(file_name) |>
+                summarize(
+                    .by = state,
+                    state_min = min(measurement),
+                    state_max = max(measurement),
+                    state_sum = sum(measurement),
+                    state_n = n()
+                ) |>
+                mutate(state_mean = state_sum/state_n) |>
+                select(state, state_min, state_mean, state_max) |>
+                collect()
+            df
+        },
+        read_delim_base_sed_paralel = {
+            chunk_size <- as.numeric(n)
+            n_chunks <- 9
+            cmd_list <- vector(mode = "character", length = n_chunks)
+            chunks <- seq(2, chunk_size+1, length.out = n_chunks + 1)
+            i <- 1
+            repeat {
+                cmd_list[i] <- paste0("sed -n -e '", chunks[i],",",chunks[i+1],"p' ", file_name)
+                i <- i + 1
+                if(chunks[i] >= chunk_size+1) break;
+            }
+            print(cmd_list)
+            result_list <- parallel::mclapply(cmd_list, mc.cores = 8, FUN = \(cmd){
+                df <- read.delim(pipe(cmd[[1]]), sep=",", header=FALSE)
+                vapply(
+                    split(df$V1, df$V2),
+                    function(x) c(min(x), max(x), mean(x)),
+                    double(3)
+                )
+            })
+            result <- do.call("rbind", result_list)
+            rbind(
+                matrixStats::colMins(result),
+                matrixStats::colMaxs(result),
+                colSums(result)
+            )
+        },
+        dt_sed_paralel = {
+            chunk_size <- as.numeric(n)
+            n_chunks <- 9
+            skips <- seq(1, chunk_size+1, length.out = n_chunks + 1)[1:n_chunks-1]
+            nrows <- chunk_size/n_chunks
+            result_list <- parallel::mclapply(skips, mc.cores = 8, FUN = \(skip){
+                df <- data.table::fread(file_name, sep=",", skip = skip, nrows = nrows, header=FALSE, nThread = 1)
+                vapply(
+                    split(df$V1, df$V2),
+                    function(x) c(min(x), max(x), mean(x)),
+                    double(3)
+                )
+            })
+            m <- do.call("rbind", result_list)
+            result_df <- rbind(
+                matrixStats::colMins(m),
+                matrixStats::colMaxs(m),
+                colSums(m)
+            )
+            result_df
+        },
+        memory = FALSE,
         filter_gc = FALSE,
-        min_iterations = 5,
+        min_iterations = 3,
         check = FALSE
       )
       print(res)

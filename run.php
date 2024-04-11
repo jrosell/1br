@@ -5,8 +5,9 @@ $start = microtime(true);
 
 $sep = ",";
 $stations = [];
-$fp = fopen('measurements.1e6.csv', 'r');
-//$fp = fopen('measurements.1e9.csv', 'r');
+//$fp = fopen('measurements.1e6.csv', 'r');
+//$fp = fopen('measurements.1e7.csv', 'r');
+$fp = fopen('measurements.1e9.csv', 'r');
 $first = fgetcsv($fp, null, ',');
 
 while ($data = fgets($fp)) {
