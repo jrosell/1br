@@ -11,6 +11,7 @@ library(dtplyr)
 library(patchwork)
 library(arrow)
 library(tidypolars)
+library(duckplyr)
 
 threads <- 8
 data.table::setDTthreads(threads)
@@ -57,24 +58,28 @@ run <- function() {
           df <- NULL
           gc()
         },
-        duckplyr_df_from_csv = {
-          print("duckplyr_df_from_csv")
-          df <- duckplyr::duckplyr_df_from_csv(file_name) |>
-            summarize(
-              .by = state,
-              state_min = min(measurement),
-              state_max = max(measurement),
-              state_sum = sum(measurement),
-              state_n = n()
-            ) |>
-            mutate(state_mean = state_sum / state_n) |>
-            select(state, state_min, state_mean, state_max) |>
-            collect()
-          print(df)
-        },
+        # duckplyr_df_from_csv = {
+        #   print("duckplyr_df_from_csv")
+        #   file.copy(file_name, "measurements.csv", overwrite = TRUE)
+        #   df <- duckplyr::duckplyr_df_from_csv("measurements.csv") |>
+        #     group_by(state) |>
+        #     summarize(
+        #       state_min = min(measurement),
+        #       state_sum = sum(measurement),
+        #       state_n = n(),
+        #       state_max = max(measurement)
+        #     ) |>
+        #     collect()  |>
+        #     mutate(state_mean = state_sum / state_n) |>
+        #     select(state, state_min, state_mean, state_max) |>
+        #   print(as_tibble(df), n = Inf)
+        #   df <- NULL
+        #   gc()
+        # },
         arrow_dataset = {
           print("arrow_dataset")
-          ds <- arrow::open_csv_dataset(file_name)
+          file.copy(file_name, "measurements.csv", overwrite = TRUE)
+          ds <- arrow::open_csv_dataset("measurements.csv")
           df <- ds |>
             summarize(
               .by = state,
@@ -86,11 +91,14 @@ run <- function() {
             mutate(state_mean = state_sum / state_n) |>
             select(state, state_min, state_mean, state_max) |>
             collect()
-          df
+          print(as_tibble(df), n = Inf)
+          df <- NULL
+          gc()
         },
         arrow_dataset_batch_processing = {
           print("arrow_dataset_batch_processing")
-          ds <- arrow::open_csv_dataset(file_name)
+          file.copy(file_name, "measurements.csv", overwrite = TRUE)
+          ds <- arrow::open_csv_dataset("measurements.csv")
           df <- ds |>
             arrow::map_batches(function(batch) {
               batch |>
@@ -107,28 +115,10 @@ run <- function() {
             mutate(state_mean = state_sum / state_n) |>
             select(state, state_min, state_mean, state_max) |>
             collect()
-          df
+          print(as_tibble(df), n = Inf)
+          df <- NULL
+          gc()
         },
-        # dt_sed_paralel = {
-        #   print("dt_sed_paralel")
-        #   chunk_size <- as.numeric(n)
-        #   n_chunks <- 7
-        #   skips <- seq(1, chunk_size + 1, length.out = n_chunks + 1)[1:n_chunks - 1]
-        #   nrows <- chunk_size / n_chunks
-        #   result_list <- parallel::mclapply(skips, mc.cores = 8, FUN = \(skip){
-        #     df <- data.table::fread(file_name, sep = ",", skip = skip, nrows = nrows, header = FALSE, nThread = 1)
-        #     df <- df[,
-        #       .(
-        #         mean = mean(measurement),
-        #         min = min(measurement),
-        #         max = max(measurement)
-        #       ),
-        #       by = state
-        #     ]
-        #   })
-        #   result_df <- data.table::rbindlist(result_list)
-        #   result_df
-        # },
         memory = FALSE,
         filter_gc = FALSE,
         min_iterations = 3,
