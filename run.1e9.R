@@ -17,9 +17,12 @@ threads <- 8
 data.table::setDTthreads(threads)
 Sys.setenv(POLARS_MAX_THREADS = threads)
 arrow::set_cpu_count(threads)
-duckdb_set_threads <- \(conn) {
+duckdb_set_threads <- \(threads) {
+  conn <- duckplyr:::get_default_duckdb_connection()
   dbExecute(conn = conn, paste0("PRAGMA threads='", threads, "'"))
+  invisible()
 }
+duckdb_set_threads(8)
 
 run <- function() {
   all <- bench::press(
@@ -58,24 +61,24 @@ run <- function() {
           df <- NULL
           gc()
         },
-        # duckplyr_df_from_csv = {
-        #   print("duckplyr_df_from_csv")
-        #   file.copy(file_name, "measurements.csv", overwrite = TRUE)
-        #   df <- duckplyr::duckplyr_df_from_csv("measurements.csv") |>
-        #     group_by(state) |>
-        #     summarize(
-        #       state_min = min(measurement),
-        #       state_sum = sum(measurement),
-        #       state_n = n(),
-        #       state_max = max(measurement)
-        #     ) |>
-        #     collect()  |>
-        #     mutate(state_mean = state_sum / state_n) |>
-        #     select(state, state_min, state_mean, state_max) |>
-        #   print(as_tibble(df), n = Inf)
-        #   df <- NULL
-        #   gc()
-        # },
+        duckplyr_df_from_csv = {
+            print("duckplyr_df_from_csv")
+            file.copy(file_name, "measurements.csv", overwrite = TRUE)
+            df <- duckplyr::duckplyr_df_from_csv(file_name) |>
+                summarize(
+                    .by = state,
+                    state_min = min(measurement),
+                    state_max = max(measurement),
+                    state_sum = sum(measurement),
+                    state_n = n()
+                ) |>
+                mutate(state_mean = state_sum / state_n) |>
+                select(state, state_min, state_mean, state_max) |>
+                collect()
+            print(as_tibble(df), n = Inf)
+            df <- NULL
+            gc()
+        },
         arrow_dataset = {
           print("arrow_dataset")
           file.copy(file_name, "measurements.csv", overwrite = TRUE)
@@ -95,30 +98,30 @@ run <- function() {
           df <- NULL
           gc()
         },
-        arrow_dataset_batch_processing = {
-          print("arrow_dataset_batch_processing")
-          file.copy(file_name, "measurements.csv", overwrite = TRUE)
-          ds <- arrow::open_csv_dataset("measurements.csv")
-          df <- ds |>
-            arrow::map_batches(function(batch) {
-              batch |>
-                as.data.frame() |>
-                summarize(
-                  .by = state,
-                  state_min = min(measurement),
-                  state_max = max(measurement),
-                  state_sum = sum(measurement),
-                  state_n = n()
-                ) |>
-                arrow::as_record_batch()
-            }) |>
-            mutate(state_mean = state_sum / state_n) |>
-            select(state, state_min, state_mean, state_max) |>
-            collect()
-          print(as_tibble(df), n = Inf)
-          df <- NULL
-          gc()
-        },
+        # arrow_dataset_batch_processing = {
+        #   print("arrow_dataset_batch_processing")
+        #   file.copy(file_name, "measurements.csv", overwrite = TRUE)
+        #   ds <- arrow::open_csv_dataset("measurements.csv")
+        #   df <- ds |>
+        #     arrow::map_batches(function(batch) {
+        #       batch |>
+        #         as.data.frame() |>
+        #         summarize(
+        #           .by = state,
+        #           state_min = min(measurement),
+        #           state_max = max(measurement),
+        #           state_sum = sum(measurement),
+        #           state_n = n()
+        #         ) |>
+        #         arrow::as_record_batch()
+        #     }) |>
+        #     mutate(state_mean = state_sum / state_n) |>
+        #     select(state, state_min, state_mean, state_max) |>
+        #     collect()
+        #   print(as_tibble(df), n = Inf)
+        #   df <- NULL
+        #   gc()
+        # },
         memory = FALSE,
         filter_gc = FALSE,
         min_iterations = 3,
