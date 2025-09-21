@@ -4,36 +4,43 @@ output:
     html_preview: false
 ---
 
+
 ## 1br
+
 
 ### Introduction
 
-1 Billion Row challenge with R:
-
+This is 1 Billion Row challenge with R. <em>Note that 1 billion in english = 1 millardo en español = 10e9.<em>
 
 - This is the repo inspired by [Gunnar Morlng's](https://www.morling.dev/blog/one-billion-row-challenge/) 1 billion row challenge to see which functions / libraries are quickest in summarizing the mean, min and max of a 1 billion rows of record
-- This work is based on [alejandrohagan/1br](https://github.com/alejandrohagan/1br) and [#5](https://github.com/alejandrohagan/1br/issues/5), but I've only used 1e8 rows.
-- I added some duckdb options and polars scan option. In order to do it I've added a file copy and file reading steps in each benchmark method to be sure to compare the pipelines without caching and a maximum of 8 threads.
+- This work is based on [alejandrohagan/1br](https://github.com/alejandrohagan/1br) and [#5](https://github.com/alejandrohagan/1br/issues/5).
+- I added some duckdb options and the polars scan option. In order to do it I've added a file copy and file reading steps in each benchmark method to be sure to compare the pipelines without caching and a maximum of 8 threads.
 - If you see any issues or have suggestions of improvements, please let me know.
 
-Note: 1 billion in english = 1 millardo en español = 10e9
+
 
 ### Instructions
 
--   If you need, execute install_required_packages(install = TRUE) from install.R file.
 -   Generate 1e5, 1e6, 1e7, 1e8, 1e9 data running: ./generate_data.sh
--   Run the benchmark running: Rscript run.R or Rscript run-all.R. You can execute run-small.R to run only 1e5, 1e6, 1e7, 1e8.
+-   Run the benchmark running: Rscript run.R or Rscript run_all.R (Or execute run_small.R if you noly want to run only 1e5, 1e6, 1e7, 1e8).
 -   Check the generated plots and the results.
+
 
 ### Results
 
-
 #### 2025-09-21
 
+It seems duckdb, duckplyr and dplyr (with duckdb or tidypolars streaming backends) are the fastest options for 1e9 rows.
+
 ```{r}
-library(tidyverse)
+suppressPackageStartupMessages(library(tidyverse))
+
 read_rds(here::here("output", "2025-09-21_all.rds")) |> 
   select(n, expression, median) |> 
+  mutate(expression = map_chr(expression, deparse1)) |>
+  mutate(expression = map_chr(expression, ~ {
+    str_match(.x, 'print\\(\\"([^\\"]+)\\"\\)')[,2]
+  })) |> 
   group_by(n) |> 
   arrange(median) |>   
   group_map(\(x, group) {
@@ -65,13 +72,11 @@ read_rds(here::here("output", "2025-09-21_all.rds")) |>
 ![](output/2024-02-29_all_rows.png)
 
  
+
 ### What can you do?
 
-If you want, you have time and enough memory available in your computer, then you can try get the results:
+If you want, you have time and enough memory available in your computer, then you can try to run the benchmark yourself and get the results.
 
--   Generate 1e6, 1e7, 1e8 or 1e9 data running ./generate_data.sh
--   Run the benchmark running Rscript run.R
--   Check the generated plots.
--   Compare with other languages and solutions (Look at compare.php or onebrc for for rust)
+If you what, look at other languages solutions (run.php for PHP or onebrc for rust)
 
 Feedback is welcome. You can open an issue in this repo.

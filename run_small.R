@@ -24,6 +24,8 @@ pkgs <- rlang::chr(
   "arrow",
   "tidypolars",
   "jrrosell",
+  "duckplyr",
+  "glue",
 )
 pak::sysreqs_check_installed(pkgs) # rustup install nightly
 pak::pak(pkgs)
@@ -40,16 +42,33 @@ arrow::set_cpu_count(threads)
 duckdb_set_threads <- \(conn) {
   DBI::dbExecute(conn = conn, paste0("PRAGMA threads='", threads, "'"))
 }
+duckplyr::db_exec(glue("SET threads TO {threads}"))
 
 # Benchmark ----
 run <- function() {
   all <- bench::press(
-    # n = c("1e6", "1e7", "1e8"),
-    n = c("1e6", "1e7", "1e8", "1e9"),
+    n = c("1e6", "1e7", "1e8"),
+    # n = c("1e6", "1e7", "1e8", "1e9"),
     # n = c("1e9"),
     {
       file_name <- here::here("data", paste0("measurements.", n, ".csv"))
       res <- bench::mark(
+        read_csv_duckdb = {
+          print("read_csv_duckdb")
+          file.copy(file_name, "measurements.csv", overwrite = TRUE)
+          df <- duckplyr::read_csv_duckdb(file_name) |>
+            summarize(
+              .by = state,
+              state_min = min(measurement),
+              state_mean = mean(measurement),
+              state_max = max(measurement)
+            ) |>
+            select(state, state_min, state_mean, state_max) |>
+            collect()
+          print(as_tibble(df), n = Inf)
+          df <- NULL
+          gc()
+        },
         duckdb_import_parallel = {
           print("duckdb_import_parallel")
           file.copy(file_name, "measurements.csv", overwrite = TRUE)
@@ -71,6 +90,7 @@ run <- function() {
           duckdb_set_threads(con)
           df <- dbGetQuery(con, sqltxt)
           print(as_tibble(df), n = Inf)
+          df <- NULL
           dbDisconnect(con, shutdown = TRUE)
           gc()
         },
@@ -109,7 +129,7 @@ run <- function() {
           file.copy(file_name, "measurements.csv", overwrite = TRUE)
           con <- dbConnect(duckdb(), ":memory:")
           duckdb_set_threads(con)
-          df <- dplyr::tbl(con, "measurements.csv", check_from = FALSE)
+          df <- dplyr::tbl(con, "measurements.csv")
           df <- df |>
             summarise(
               .by = state,
@@ -224,18 +244,6 @@ run <- function() {
               min = min(measurement, na.rm = TRUE),
               max = max(measurement, na.rm = TRUE)
             )
-          print(as_tibble(df), n = Inf)
-          df <- NULL
-          gc()
-        },
-        scan_polars_streaming = {
-          print("scan_polars_streaming")
-          file.copy(file_name, "measurements.csv", overwrite = TRUE)
-          df <- pl$scan_csv("measurements.csv")$group_by("state")$agg(
-            pl$col("measurement")$min()$alias("min_m"),
-            pl$col("measurement")$max()$alias("max_m"), # nolint: indentation_linter, line_length_linter.
-            pl$col("measurement")$mean()$alias("mean_m")
-          )$collect()
           print(as_tibble(df), n = Inf)
           df <- NULL
           gc()
