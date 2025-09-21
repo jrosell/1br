@@ -10,7 +10,7 @@ output:
 
 ### Introduction
 
-This is 1 Billion Row challenge with R. <em>Note that 1 billion in english = 1 millardo en español = 10e9.<em>
+This is 1 Billion Row challenge with R. <em>Note that 1 billion in english = 1 millardo en español = 10e9.</em>
 
 - This is the repo inspired by [Gunnar Morlng's](https://www.morling.dev/blog/one-billion-row-challenge/) 1 billion row challenge to see which functions / libraries are quickest in summarizing the mean, min and max of a 1 billion rows of record
 - This work is based on [alejandrohagan/1br](https://github.com/alejandrohagan/1br) and [#5](https://github.com/alejandrohagan/1br/issues/5).
