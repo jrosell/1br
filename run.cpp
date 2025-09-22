@@ -1,5 +1,6 @@
-// $ g++ -std=c++17 -O3 -m64 -march=native -mtune=native -flto -pthread -DNTHREADS=$(nproc) run.cpp -o run && ./run data/measurements.1e9.csv
+// $ Rscript generate_data.R 1e9
 // $ g++ -std=c++17 -O3 -m64 -march=native -mtune=native -flto -pthread -DNTHREADS=8 run.cpp -o run && ./run data/measurements.1e9.csv
+// $ g++ -std=c++17 -O3 -m64 -march=native -mtune=native -flto -pthread -DNTHREADS=$(nproc) run.cpp -o run && ./run data/measurements.1e9.csv
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -183,7 +184,7 @@ int main(int argc, char* argv[]) {
     auto end_time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> total_time = end_time - start_time;
     std::cout << "Total execution time: " << total_time.count() << " s\n";
-    // Total execution time: 0.538664 s
+    // Total execution time: 7.75093s
 
     return 0;
 }
