@@ -86,7 +86,7 @@ read_rds(here::here("output", "2025-09-22_all.rds")) |>
 
 ![](output/2025-09-22_1e9_rows.png)
 
-![](output/2025-09-21_all_rows.png)
+![](output/2025-09-22_all_rows.png)
 
 #### 2024-02-29
 
