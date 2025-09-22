@@ -53,6 +53,134 @@ run <- function() {
     {
       file_name <- here::here("data", paste0("measurements.", n, ".csv"))
       res <- bench::mark(
+        # Not working for 1e9
+        DT_dplyr = {
+          print("DT_dplyr")
+          file.copy(file_name, "measurements.csv", overwrite = TRUE)
+          df <- data.table::fread("measurements.csv")
+          df <- df |>
+            summarise(
+              .by = state,
+              mean = mean(measurement, na.rm = TRUE),
+              min = min(measurement, na.rm = TRUE),
+              max = max(measurement, na.rm = TRUE)
+            )
+          print(as_tibble(df), n = Inf)
+          df <- NULL
+          gc()
+        },
+        # Not working for 1e9
+        scan_tidypolars_dplyr = {
+          print("scan_tidypolars_dplyr")
+          file.copy(file_name, "measurements.csv", overwrite = TRUE)
+          df <- pl$scan_csv("measurements.csv")
+          df <- df |>
+            summarise(
+              .by = state,
+              mean = mean(measurement, na.rm = TRUE),
+              min = min(measurement, na.rm = TRUE),
+              max = max(measurement, na.rm = TRUE)
+            ) |>
+            collect()
+          print(as_tibble(df), n = Inf)
+          df <- NULL
+          gc()
+        },
+        # Not working for 1e9
+        DT_datatable = {
+          print("DT_datatable")
+          file.copy(file_name, "measurements.csv", overwrite = TRUE)
+          df <- data.table::fread("measurements.csv")
+          df <- df[,
+            .(
+              mean = mean(measurement, na.rm = TRUE),
+              min = min(measurement, na.rm = TRUE),
+              max = max(measurement, na.rm = TRUE)
+            ),
+            by = state
+          ]
+          print(as_tibble(df), n = Inf)
+          df <- NULL
+          gc()
+        },
+        # Not working for 1e9
+        DT_datatable_range = {
+          print("DT_datatable_range")
+          file.copy(file_name, "measurements.csv", overwrite = TRUE)
+          fun <- function(x) {
+            range <- range(x)
+            list(mean = mean(x, na.rm = TRUE), min = range[1], max = range[2])
+          }
+          df <- data.table::fread("measurements.csv")
+          df <- df[, fun(measurement), by = state]
+          print(as_tibble(df), n = Inf)
+          df <- NULL
+          gc()
+        },
+        # Not working for 1e9
+        arrow = {
+          print("arrow")
+          file.copy(file_name, "measurements.csv", overwrite = TRUE)
+          df <- read_csv_arrow("measurements.csv") |>
+            summarise(
+              .by = state,
+              mean = mean(measurement, na.rm = TRUE),
+              min = min(measurement, na.rm = TRUE),
+              max = max(measurement, na.rm = TRUE)
+            ) |>
+            collect()
+          print(as_tibble(df), n = Inf)
+          df <- NULL
+          gc()
+        },
+        # Not working for 1e9
+        scan_polars = {
+          print("scan_polars")
+          file.copy(file_name, "measurements.csv", overwrite = TRUE)
+          df <- pl$scan_csv("measurements.csv")$group_by("state")$agg(
+            pl$col("measurement")$min()$alias("min_m"),
+            pl$col("measurement")$max()$alias("max_m"), # nolint: indentation_linter, line_length_linter.
+            pl$col("measurement")$mean()$alias("mean_m")
+          )$collect()
+          print(as_tibble(df), n = Inf)
+          df <- NULL
+          gc()
+        },
+        # Not working for 1e9
+        dtplyr = {
+          print("dtplyr")
+          file.copy(file_name, "measurements.csv", overwrite = TRUE)
+          df <- data.table::fread(
+            "measurements.csv",
+            stringsAsFactors = TRUE
+          )
+          df <- lazy_dt(df) %>%
+            summarise(
+              .by = state,
+              mean = mean(measurement, na.rm = TRUE),
+              min = min(measurement, na.rm = TRUE),
+              max = max(measurement, na.rm = TRUE)
+            )
+          print(as_tibble(df), n = Inf)
+          df <- NULL
+          gc()
+        },
+        scan_tidypolars_dplyr_streaming = {
+          print("scan_tidypolars_dplyr_streaming")
+          file.copy(file_name, "measurements.csv", overwrite = TRUE)
+          df <- pl$scan_csv("measurements.csv")
+          df <- df |>
+            summarise(
+              .by = state,
+              mean = mean(measurement, na.rm = TRUE),
+              min = min(measurement, na.rm = TRUE),
+              max = max(measurement, na.rm = TRUE)
+            ) |>
+            collect(engine = "streaming")
+          print(as_tibble(df), n = Inf)
+          df <- NULL
+          gc()
+        },
         read_csv_duckdb = {
           print("read_csv_duckdb")
           file.copy(file_name, "measurements.csv", overwrite = TRUE)
@@ -141,127 +269,6 @@ run <- function() {
           print(as_tibble(df), n = Inf)
           df <- NULL
           dbDisconnect(con, shutdown = TRUE)
-          gc()
-        },
-        DT_dplyr = {
-          print("DT_dplyr")
-          file.copy(file_name, "measurements.csv", overwrite = TRUE)
-          df <- data.table::fread("measurements.csv")
-          df <- df |>
-            summarise(
-              .by = state,
-              mean = mean(measurement, na.rm = TRUE),
-              min = min(measurement, na.rm = TRUE),
-              max = max(measurement, na.rm = TRUE)
-            )
-          print(as_tibble(df), n = Inf)
-          df <- NULL
-          gc()
-        },
-        scan_tidypolars_dplyr = {
-          print("scan_tidypolars_dplyr")
-          file.copy(file_name, "measurements.csv", overwrite = TRUE)
-          df <- pl$scan_csv("measurements.csv")
-          df <- df |>
-            summarise(
-              .by = state,
-              mean = mean(measurement, na.rm = TRUE),
-              min = min(measurement, na.rm = TRUE),
-              max = max(measurement, na.rm = TRUE)
-            ) |>
-            collect()
-          print(as_tibble(df), n = Inf)
-          df <- NULL
-          gc()
-        },
-        DT_datatable = {
-          print("DT_datatable")
-          file.copy(file_name, "measurements.csv", overwrite = TRUE)
-          df <- data.table::fread("measurements.csv")
-          df <- df[,
-            .(
-              mean = mean(measurement, na.rm = TRUE),
-              min = min(measurement, na.rm = TRUE),
-              max = max(measurement, na.rm = TRUE)
-            ),
-            by = state
-          ]
-          print(as_tibble(df), n = Inf)
-          df <- NULL
-          gc()
-        },
-        DT_datatable_range = {
-          print("DT_datatable_range")
-          file.copy(file_name, "measurements.csv", overwrite = TRUE)
-          fun <- function(x) {
-            range <- range(x)
-            list(mean = mean(x, na.rm = TRUE), min = range[1], max = range[2])
-          }
-          df <- data.table::fread("measurements.csv")
-          df <- df[, fun(measurement), by = state]
-          print(as_tibble(df), n = Inf)
-          df <- NULL
-          gc()
-        },
-        arrow = {
-          print("arrow")
-          file.copy(file_name, "measurements.csv", overwrite = TRUE)
-          df <- read_csv_arrow("measurements.csv") |>
-            summarise(
-              .by = state,
-              mean = mean(measurement, na.rm = TRUE),
-              min = min(measurement, na.rm = TRUE),
-              max = max(measurement, na.rm = TRUE)
-            ) |>
-            collect()
-          print(as_tibble(df), n = Inf)
-          df <- NULL
-          gc()
-        },
-        scan_polars = {
-          print("scan_polars")
-          file.copy(file_name, "measurements.csv", overwrite = TRUE)
-          df <- pl$scan_csv("measurements.csv")$group_by("state")$agg(
-            pl$col("measurement")$min()$alias("min_m"),
-            pl$col("measurement")$max()$alias("max_m"), # nolint: indentation_linter, line_length_linter.
-            pl$col("measurement")$mean()$alias("mean_m")
-          )$collect()
-          print(as_tibble(df), n = Inf)
-          df <- NULL
-          gc()
-        },
-        dtplyr = {
-          print("dtplyr")
-          file.copy(file_name, "measurements.csv", overwrite = TRUE)
-          df <- data.table::fread(
-            "measurements.csv",
-            stringsAsFactors = TRUE
-          )
-          df <- lazy_dt(df) %>%
-            summarise(
-              .by = state,
-              mean = mean(measurement, na.rm = TRUE),
-              min = min(measurement, na.rm = TRUE),
-              max = max(measurement, na.rm = TRUE)
-            )
-          print(as_tibble(df), n = Inf)
-          df <- NULL
-          gc()
-        },
-        scan_tidypolars_dplyr_streaming = {
-          print("scan_tidypolars_dplyr_streaming")
-          file.copy(file_name, "measurements.csv", overwrite = TRUE)
-          df <- pl$scan_csv("measurements.csv")
-          df <- df |>
-            summarise(
-              .by = state,
-              mean = mean(measurement, na.rm = TRUE),
-              min = min(measurement, na.rm = TRUE),
-              max = max(measurement, na.rm = TRUE)
-            ) |>
-            collect(engine = "streaming")
-          print(as_tibble(df), n = Inf)
-          df <- NULL
           gc()
         },
         filter_gc = FALSE,

@@ -28,14 +28,14 @@ This is 1 Billion Row challenge with R. <em>Note that 1 billion in english = 1 m
 
 ### Results
 
-#### 2025-09-21
+#### 2025-09-22
 
-It seems duckdb, duckplyr and dplyr (with duckdb or tidypolars streaming backends) are the fastest options for 1e9 rows.
+It seems that duckdb, duckplyr and dplyr (with duckdb or tidypolars streaming backends) are good options for 1e9 rows.
 
 ```{r}
 suppressPackageStartupMessages(library(tidyverse))
 
-read_rds(here::here("output", "2025-09-21_all.rds")) |> 
+read_rds(here::here("output", "2025-09-22_all.rds")) |> 
   select(n, expression, median) |> 
   mutate(expression = map_chr(expression, deparse1)) |>
   mutate(expression = map_chr(expression, ~ {
@@ -49,25 +49,12 @@ read_rds(here::here("output", "2025-09-21_all.rds")) |>
   invisible()
 ```
 
-
-![](output/2025-09-21_1e6_rows.png)
-
-![](output/2025-09-21_1e7_rows.png)
-
-![](output/2025-09-21_1e8_rows.png)
-
-![](output/2025-09-21_1e9_rows.png)
+![](output/2025-09-22_1e9_rows.png)
 
 ![](output/2025-09-21_all_rows.png)
 
 
 #### 2024-02-29
-
-![](output/2024-02-29_1e6_rows.png)
-
-![](output/2024-02-29_1e7_rows.png)
-
-![](output/2024-02-29_1e8_rows.png)
 
 ![](output/2024-02-29_all_rows.png)
 
@@ -77,6 +64,6 @@ read_rds(here::here("output", "2025-09-21_all.rds")) |>
 
 If you want, you have time and enough memory available in your computer, then you can try to run the benchmark yourself and get the results.
 
-If you what, look at other languages solutions (run.php for PHP or onebrc for rust)
+If you what, look at other languages solutions (run.php for PHP, run.cpp for C++ or onebrc/src/main.rs for rust)
 
 Feedback is welcome. You can open an issue in this repo.

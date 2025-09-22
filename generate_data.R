@@ -1,34 +1,38 @@
 library(data.table)
 library(datasets)
 
-print("creating dataset")
-
-input <- base::commandArgs(trailingOnly = TRUE)
-
-input <- base::as.numeric(input)
-
-dataset_message <- paste0("dataset will be ", input, " rows")
-
-print(dataset_message)
+file_name <- "measurements.csv"
+chunk_size <- 1e8
+n_rows <- as.integer(commandArgs(trailingOnly = TRUE))
+cat("Creating dataset of", n_rows, "rows\n")
 
 set.seed(2024)
 
-measurement_tbl <- data.frame(
-  measurement = stats::rnorm(input),
-  state = base::sample(datasets::state.abb, size = input, replace = TRUE)
+first_chunk_size <- min(chunk_size, n_rows)
+dt <- data.table(
+  measurement = rnorm(first_chunk_size),
+  state = sample(state.abb, first_chunk_size, replace = TRUE)
 )
+fwrite(dt, file_name)
 
+if (n_rows > chunk_size) {
+  for (start in seq(chunk_size + 1, n_rows, by = chunk_size)) {
+    n <- min(chunk_size, n_rows - start + 1)
+    dt <- data.table(
+      measurement = rnorm(n),
+      state = sample(state.abb, n, replace = TRUE)
+    )
+    fwrite(dt, file_name, append = TRUE, col.names = FALSE)
+    cat("Written rows", start, "to", start + n - 1, "for", n_rows, "\n")
+  }
+}
 
-print("dataset created, beginning saving dataset")
-
-
-file <- "measurements.csv"
-
-data.table::fwrite(measurement_tbl, "measurements.csv")
-
-
-size <- structure(file.info(file)$size, class = "object_size") |> format("auto")
-
-
-
-message("Finished saving dataset \"", file, "\". Its file size is: ", size, ".")
+size <- structure(file.info(file_name)$size, class = "object_size") |>
+  format("auto")
+message(
+  "Finished saving dataset \"",
+  file_name,
+  "\". Its file size is: ",
+  size,
+  "."
+)

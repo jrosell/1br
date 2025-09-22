@@ -29,15 +29,15 @@ english = 1 millardo en español = 10e9.</em>
 
 ### Results
 
-#### 2025-09-21
+#### 2025-09-22
 
-It seems duckdb, duckplyr and dplyr (with duckdb or tidypolars streaming
-backends) are the fastest options for 1e9 rows.
+It seems that duckdb, duckplyr and dplyr (with duckdb or tidypolars
+streaming backends) are good options for 1e9 rows.
 
 ``` r
 suppressPackageStartupMessages(library(tidyverse))
 
-read_rds(here::here("output", "2025-09-21_all.rds")) |> 
+read_rds(here::here("output", "2025-09-22_all.rds")) |> 
   select(n, expression, median) |> 
   mutate(expression = map_chr(expression, deparse1)) |>
   mutate(expression = map_chr(expression, ~ {
@@ -51,84 +51,44 @@ read_rds(here::here("output", "2025-09-21_all.rds")) |>
   invisible()
 ```
 
-    ## # A tibble: 12 × 3
-    ##    expression                      median     n    
-    ##    <chr>                           <bench_tm> <chr>
-    ##  1 scan_tidypolars_dplyr_streaming 0.1827904  1e6  
-    ##  2 scan_tidypolars_dplyr           0.1871658  1e6  
-    ##  3 DT_datatable_range              0.1875809  1e6  
-    ##  4 DT_datatable                    0.1889944  1e6  
-    ##  5 dtplyr                          0.1938659  1e6  
-    ##  6 scan_polars                     0.1945461  1e6  
-    ##  7 arrow                           0.2268887  1e6  
-    ##  8 DT_dplyr                        0.2381618  1e6  
-    ##  9 duckdb_import_parallel          0.2711271  1e6  
-    ## 10 read_csv_duckdb                 0.2874536  1e6  
-    ## 11 duckdb_dplyr_parallel           0.3806603  1e6  
-    ## 12 duckdb_dplyr                    0.4114756  1e6  
-    ## # A tibble: 12 × 3
-    ##    expression                      median     n    
-    ##    <chr>                           <bench_tm> <chr>
-    ##  1 scan_tidypolars_dplyr_streaming 0.5056319  1e7  
-    ##  2 duckdb_import_parallel          0.5673773  1e7  
-    ##  3 scan_tidypolars_dplyr           0.5803921  1e7  
-    ##  4 read_csv_duckdb                 0.5806822  1e7  
-    ##  5 scan_polars                     0.5823796  1e7  
-    ##  6 arrow                           0.6672398  1e7  
-    ##  7 duckdb_dplyr_parallel           0.6727092  1e7  
-    ##  8 dtplyr                          0.7217439  1e7  
-    ##  9 duckdb_dplyr                    0.7308517  1e7  
-    ## 10 DT_datatable                    0.8239910  1e7  
-    ## 11 DT_datatable_range              0.8369532  1e7  
-    ## 12 DT_dplyr                        1.2444711  1e7  
-    ## # A tibble: 12 × 3
-    ##    expression                      median     n    
-    ##    <chr>                           <bench_tm> <chr>
-    ##  1 duckdb_import_parallel          3.017106   1e8  
-    ##  2 read_csv_duckdb                 3.043648   1e8  
-    ##  3 duckdb_dplyr                    3.075575   1e8  
-    ##  4 duckdb_dplyr_parallel           3.100977   1e8  
-    ##  5 scan_tidypolars_dplyr_streaming 3.582265   1e8  
-    ##  6 scan_tidypolars_dplyr           4.433400   1e8  
-    ##  7 scan_polars                     5.030455   1e8  
-    ##  8 DT_datatable                    5.233836   1e8  
-    ##  9 arrow                           5.390976   1e8  
-    ## 10 DT_datatable_range              5.753170   1e8  
-    ## 11 dtplyr                          6.228207   1e8  
-    ## 12 DT_dplyr                        7.935522   1e8  
-    ## # A tibble: 12 × 3
-    ##    expression                      median     n    
-    ##    <chr>                           <bench_tm> <chr>
-    ##  1 duckdb_import_parallel          3.118653   1e9  
-    ##  2 read_csv_duckdb                 3.181535   1e9  
-    ##  3 duckdb_dplyr_parallel           3.263216   1e9  
-    ##  4 duckdb_dplyr                    3.295870   1e9  
-    ##  5 scan_tidypolars_dplyr_streaming 3.649800   1e9  
-    ##  6 scan_polars                     4.889278   1e9  
-    ##  7 arrow                           5.202243   1e9  
-    ##  8 scan_tidypolars_dplyr           5.482897   1e9  
-    ##  9 DT_datatable_range              5.765341   1e9  
-    ## 10 dtplyr                          5.856449   1e9  
-    ## 11 DT_datatable                    6.074790   1e9  
-    ## 12 DT_dplyr                        8.221444   1e9
+    ## # A tibble: 5 × 3
+    ##   expression                        median n    
+    ##   <chr>                           <bch:tm> <chr>
+    ## 1 scan_tidypolars_dplyr_streaming    175ms 1e6  
+    ## 2 duckdb_import_parallel             259ms 1e6  
+    ## 3 read_csv_duckdb                    259ms 1e6  
+    ## 4 duckdb_dplyr_parallel              367ms 1e6  
+    ## 5 duckdb_dplyr                       412ms 1e6  
+    ## # A tibble: 5 × 3
+    ##   expression                        median n    
+    ##   <chr>                           <bch:tm> <chr>
+    ## 1 scan_tidypolars_dplyr_streaming    485ms 1e7  
+    ## 2 duckdb_import_parallel             529ms 1e7  
+    ## 3 read_csv_duckdb                    542ms 1e7  
+    ## 4 duckdb_dplyr_parallel              649ms 1e7  
+    ## 5 duckdb_dplyr                       695ms 1e7  
+    ## # A tibble: 5 × 3
+    ##   expression                        median n    
+    ##   <chr>                           <bch:tm> <chr>
+    ## 1 duckdb_import_parallel             2.89s 1e8  
+    ## 2 read_csv_duckdb                    2.92s 1e8  
+    ## 3 duckdb_dplyr_parallel              2.98s 1e8  
+    ## 4 duckdb_dplyr                       3.02s 1e8  
+    ## 5 scan_tidypolars_dplyr_streaming    3.42s 1e8  
+    ## # A tibble: 5 × 3
+    ##   expression                        median n    
+    ##   <chr>                           <bch:tm> <chr>
+    ## 1 duckdb_dplyr_parallel              40.6s 1e9  
+    ## 2 duckdb_dplyr                       40.7s 1e9  
+    ## 3 duckdb_import_parallel             40.9s 1e9  
+    ## 4 read_csv_duckdb                    41.8s 1e9  
+    ## 5 scan_tidypolars_dplyr_streaming      49s 1e9
 
-![](output/2025-09-21_1e6_rows.png)
-
-![](output/2025-09-21_1e7_rows.png)
-
-![](output/2025-09-21_1e8_rows.png)
-
-![](output/2025-09-21_1e9_rows.png)
+![](output/2025-09-22_1e9_rows.png)
 
 ![](output/2025-09-21_all_rows.png)
 
 #### 2024-02-29
-
-![](output/2024-02-29_1e6_rows.png)
-
-![](output/2024-02-29_1e7_rows.png)
-
-![](output/2024-02-29_1e8_rows.png)
 
 ![](output/2024-02-29_all_rows.png)
 
@@ -137,7 +97,7 @@ read_rds(here::here("output", "2025-09-21_all.rds")) |>
 If you want, you have time and enough memory available in your computer,
 then you can try to run the benchmark yourself and get the results.
 
-If you what, look at other languages solutions (run.php for PHP or
-onebrc for rust)
+If you what, look at other languages solutions (run.php for PHP, run.cpp
+for C++ or onebrc/src/main.rs for rust)
 
 Feedback is welcome. You can open an issue in this repo.
